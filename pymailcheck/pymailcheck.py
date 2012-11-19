@@ -15,12 +15,15 @@ if auths == None:
 
 imap = imaplib.IMAP4_SSL (host)
 
-imap.login (auths[0], auths[2])
-imap.select ('INBOX', False)
+try:
+    imap.login (auths[0], auths[2])
+    imap.select ('INBOX', False)
 
-# check for unseen
-ans, msgs = imap.fetch ('1:*', '(FLAGS)')
-if any (map (lambda m: m.find ('Unseen') != -1, msgs)):
-    sys.exit (0)
-else:
+    # check for unseen
+    ans, msgs = imap.fetch ('1:*', '(FLAGS)')
+    if any (map (lambda m: m.find ('Unseen') != -1, msgs)):
+        sys.exit (0)
+    else:
+        sys.exit (1)
+except imap.error:
     sys.exit (1)
