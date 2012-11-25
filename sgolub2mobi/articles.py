@@ -2,39 +2,8 @@
 Extracts list of all articles
 """
 import sys
-import urllib
-from HTMLParser import HTMLParser
 
-
-
-def wget (url):
-    fd = urllib.urlopen (url)
-    res = fd.read ()
-    fd.close ()
-    return res
-
-
-
-class ProtografParser (HTMLParser):
-    """
-    Parses page and collects all articles links
-    """
-    def __init__ (self, data):
-        HTMLParser.__init__ (self)
-        self.kindergarden = set ()
-        self.links = set ()
-        self.feed (data)
-        self.close ()        
-
-
-    def handle_starttag (self, tag, attrs):
-        if tag == 'a':
-            for name, val in attrs:               
-                if name == 'href' and val.startswith ('/protograf/'):
-                    if val in self.kindergarden:
-                        self.links.add (val)
-                    else:
-                        self.kindergarden.add (val)
+from web import wget, ProtografParser
 
 from_page = 0
 to_page = 0
