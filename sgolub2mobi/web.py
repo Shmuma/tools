@@ -59,7 +59,7 @@ class ArticleParser (HTMLParser):
         if url_src == None:
             return ""
         ext = url_src.split ('.')[-1]
-        dest = md5.new (url_src).hexdigest () + "." + ext
+        dest = md5.new (url_src.encode ('utf-8')).hexdigest () + "." + ext
         self.images[dest] = url_src
         return "<img src=\"%s\"/>" % dest
 

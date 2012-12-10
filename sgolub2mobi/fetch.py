@@ -57,7 +57,10 @@ print "Processed %d articles, have %d image urls to fetch" % (count, len (images
 
 images_data = {}
 for dest, src in images.iteritems ():
-    images_data[dest] = wget (src)
+    try:
+        images_data[dest] = wget (src.encode ('utf-8'))
+    except IOError:
+        pass
 
 print "Downloaded, sorting articles"
 
