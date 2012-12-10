@@ -16,7 +16,7 @@ def download_article (url):
     """
     data = wget (url)
     parser = ArticleParser (data.decode ("utf-8"))
-    return parser.title, parser.date, parser.text
+    return parser.title, parser.date, parser.text, parser.images
 
 
 def parse_date (s):
@@ -40,15 +40,31 @@ def parse_date (s):
 
 
 data = []        
+images = {}
+
+count = 0
 
 for art in sys.stdin:
     art = art.strip ()
-    title, date, content = download_article (art)
+    title, date, content, images_loc = download_article (art)
+    images.update (images_loc)
     dt = parse_date (date)
     data.append ((dt, title, content))
-    print art
+    count += 1
+    print count, art
+
+print "Processed %d articles, have %d image urls to fetch" % (count, len (images))
+
+images_data = {}
+for dest, src in images.iteritems ():
+    images_data[dest] = wget (src)
+
+print "Downloaded, sorting articles"
 
 data.sort ()
 
+print "Done, writing result"
+
 with open ("posts.dat", "w+") as fd:
     pickle.dump (data, fd)
+    pickle.dump (images_data, fd)

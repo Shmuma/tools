@@ -1,3 +1,5 @@
+import re
+import md5
 import urllib
 from HTMLParser import HTMLParser
 
@@ -38,6 +40,7 @@ class ArticleParser (HTMLParser):
     title = None
     date = None
     text = ""
+    images = None
 
     # state
     title_coming = False
@@ -46,14 +49,27 @@ class ArticleParser (HTMLParser):
 
     def __init__ (self, data):
         HTMLParser.__init__ (self)
+        self.images = {}
         self.feed (data)
         self.close ()
 
 
+    def tweak_image (self, attrs):
+        url_src = dict (attrs).get ('src', None)
+        if url_src == None:
+            return ""
+        ext = url_src.split ('.')[-1]
+        dest = md5.new (url_src).hexdigest () + "." + ext
+        self.images[dest] = url_src
+        return "<img src=\"%s\"/>" % dest
+
     def handle_starttag (self, tag, attrs):
         if self.inside_content > 0:
-            self.text += "<%s %s>" % (tag, " ".join (map (lambda a: "%s='%s'" % a, attrs)))
             self.inside_content += 1
+            if tag == 'img':
+                self.text += self.tweak_image (attrs)
+            else:
+                self.text += "<%s %s>" % (tag, " ".join (map (lambda a: "%s='%s'" % a, attrs)))
             return
         att = dict (attrs)
         if tag == "h1" and att.get ('class') == "main-page-title":
