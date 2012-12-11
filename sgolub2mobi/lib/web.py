@@ -1,6 +1,9 @@
+# -*- coding: utf-8 -*-
+
 import re
 import md5
 import urllib
+import datetime
 from HTMLParser import HTMLParser
 
 
@@ -104,3 +107,24 @@ class ArticleParser (HTMLParser):
     def handle_entityref (self, name):
         if self.inside_content > 0:
             self.text += "&%s;" % name
+
+
+
+def parse_date (s):
+    v = s.split (" ")
+    d = int (v[0])
+    mn = v[1]
+    y = int (v[2])
+    m2d = { "Январь": 1,
+            "Февраль": 2,
+            "Март": 3,
+            "Апрель": 4,
+            "Май": 5,
+            "Июнь": 6,
+            "Июль": 7,
+            "Август": 8,
+            "Сентябрь": 9,
+            "Октябрь": 10,
+            "Ноябрь": 11,
+            "Декабрь": 12 }
+    return datetime.date (year=y, month=m2d[mn.encode ('utf-8')], day=d)
