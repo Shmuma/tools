@@ -49,7 +49,7 @@ for art in sys.stdin:
     title, date, content, images_loc = download_article (art)
     images.update (images_loc)
     dt = parse_date (date)
-    data.append ((dt, title, content))
+    data.append ((dt, title, content, images_loc.keys ()))
     count += 1
     print count, art
 

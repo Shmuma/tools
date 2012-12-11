@@ -58,6 +58,8 @@ class ArticleParser (HTMLParser):
         url_src = dict (attrs).get ('src', None)
         if url_src == None:
             return ""
+        if url_src[0] == '/':
+            url_src = u'http://sgolub.ru' + url_src
         ext = url_src.split ('.')[-1]
         dest = md5.new (url_src.encode ('utf-8')).hexdigest () + "." + ext
         self.images[dest] = url_src
