@@ -47,6 +47,8 @@ for me in blog_db.meta.values ():
     if dt_from != None:
         if dt_from <= me.date and dt_to >= me.date:
             entries.append (me)
+    else:
+        entries.append (me)
 
 entries.sort (cmp=lambda a, b: cmp (a.date, b.date))
 
@@ -71,7 +73,7 @@ for e in entries:
     if e.date.month != mon:
         if mon != None:
             write_index (path, toc_list)
-        path = os.path.join (result_dir, "%04d-%2d" % (e.date.year, e.date.month))
+        path = os.path.join (result_dir, "%04d-%02d" % (e.date.year, e.date.month))
         os.mkdir (path)
         idx = 0
         toc_list = ""
@@ -91,6 +93,6 @@ for e in entries:
                 fd.write (blog_db.images[key])
         else:
             print "Image %s not in img db, skip" % key
-    print e.date
 
-write_index (path, toc_list)
+if mon != None:
+    write_index (path, toc_list)
