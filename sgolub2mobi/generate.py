@@ -24,7 +24,7 @@ logging.basicConfig (format="%(asctime)s: %(message)s", level=logging.INFO)
 dt_from = dt_to = None
 
 if len (sys.argv) == 1:
-    logging.info ("Export all posts on monthly basis")
+    logging.info ("Export all posts")
 elif len (sys.argv) == 3:
     dt_from = parse_dt (sys.argv[1])
     dt_to = parse_dt (sys.argv[2], True) - datetime.timedelta (days=1)
@@ -52,11 +52,27 @@ for me in blog_db.meta.values ():
 
 entries.sort (cmp=lambda a, b: cmp (a.date, b.date))
 
-mon = None
+idx = 0
+toc_list = ""
 
-def write_index (path, toc):
-    with open (os.path.join (path, "index.html"), "w+") as fd:
-        fd.write ("""
+for e in entries:
+    idx += 1
+    out_name = "%05d.html" % idx
+    toc_list += "<a href='%s'>%s: %s</a><br/>\n" % (out_name, e.date, e.title)
+    with open (os.path.join (result_dir, out_name), "w+") as fd:
+        fd.write ("<html><body>\n")
+        fd.write ("<h1>%s: %s</h1>" % (e.date, e.title))
+        fd.write (blog_db.posts[e.url])
+        fd.write ("</body></html>\n")
+    for key in e.images:
+        if key in blog_db.images:
+            with open (os.path.join (result_dir, key), "wb+") as fd:
+                fd.write (blog_db.images[key])
+        else:
+            print "Image %s not in img db, skip" % key
+
+with open (os.path.join (result_dir, "index.html"), "w+") as fd:
+    fd.write ("""
 <html>
    <body>
      <h1>Table of Contents</h1>
@@ -66,33 +82,3 @@ def write_index (path, toc):
    </body>
 </html>
 """ % toc_list)
-
-
-
-for e in entries:
-    if e.date.month != mon:
-        if mon != None:
-            write_index (path, toc_list)
-        path = os.path.join (result_dir, "%04d-%02d" % (e.date.year, e.date.month))
-        os.mkdir (path)
-        idx = 0
-        toc_list = ""
-        mon = e.date.month
-
-    idx += 1
-    out_name = "%05d.html" % idx
-    toc_list += "<a href='%s'>%s: %s</a><br/>\n" % (out_name, e.date, e.title)
-    with open (os.path.join (path, out_name), "w+") as fd:
-        fd.write ("<html><body>\n")
-        fd.write ("<h1>%s: %s</h1>" % (e.date, e.title))
-        fd.write (blog_db.posts[e.url])
-        fd.write ("</body></html>\n")
-    for key in e.images:
-        if key in blog_db.images:
-            with open (os.path.join (path, key), "wb+") as fd:
-                fd.write (blog_db.images[key])
-        else:
-            print "Image %s not in img db, skip" % key
-
-if mon != None:
-    write_index (path, toc_list)
