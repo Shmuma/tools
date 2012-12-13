@@ -1,44 +1,60 @@
 import os
 import sys
 import cPickle as pickle
+import logging
+import datetime
 
-print "Load posts data..."
-with open ("posts.dat", "r") as fd:
-    data = pickle.load (fd)
-    images = pickle.load (fd)
+from lib import db
 
-print "Have %d posts and %d images" % (len (data), len (images))
+def parse_dt (s, next_month=False):
+    v = s.split ('-')
+    year = int (v[0])
+    month = int (v[1])
+    if next_month:
+        month += 1
+        if month > 12:
+            year += 1
+            month = 1
+    return datetime.date (year=year, month=month, day=1)
+
+
+logging.basicConfig (format="%(asctime)s: %(message)s", level=logging.INFO)
+
+# parse arguments
+dt_from = dt_to = None
+
+if len (sys.argv) == 1:
+    logging.info ("Export all posts on monthly basis")
+elif len (sys.argv) == 3:
+    dt_from = parse_dt (sys.argv[1])
+    dt_to = parse_dt (sys.argv[2], True) - datetime.timedelta (days=1)
+    logging.info ("Export posts from %s to %s" % (dt_from, dt_to))
+else:
+    print "Usage: generate.py [YYYY-MM YYYY-MM]"
+    sys.exit (0)
+
+blog_db = db.BlogDB ("/mnt/heap/misc/sgolub")
+blog_db.load ()
 
 # write data
 result_dir = "res"
 
 os.mkdir (result_dir)
 
-toc_list = ""
+entries = []
 
-idx = 0
+for me in blog_db.meta.values ():
+    if dt_from != None:
+        if dt_from <= me.date and dt_to >= me.date:
+            entries.append (me)
 
-for e in data:
-    date, title, content, images_keys = e
-#    if date.year != 2012:
-#        continue
-    idx += 1
-    out_name = "%05d.html" % idx
-    toc_list += "<a href='%s'>%s: %s</a><br/>\n" % (out_name.encode ('utf-8'), date, title.encode ('utf-8'))
-    with open (os.path.join (result_dir, out_name), "w+") as fd:
-        fd.write ("<html><body>\n")
-        fd.write ("<h1>%s: %s</h1>" % (date, title.encode ("utf-8")))
-        fd.write (content.encode ('utf-8'))
-        fd.write ("</body></html>\n")
-    for key in images_keys:
-        if key in images:
-            with open (os.path.join (result_dir, key), "wb+") as fd:
-                fd.write (images[key])
-        else:
-            print "Image %s not in img db, skip" % key
+entries.sort (cmp=lambda a, b: cmp (a.date, b.date))
 
-with open (os.path.join (result_dir, "index.html"), "w+") as fd:
-    fd.write ("""
+mon = None
+
+def write_index (path, toc):
+    with open (os.path.join (path, "index.html"), "w+") as fd:
+        fd.write ("""
 <html>
    <body>
      <h1>Table of Contents</h1>
@@ -48,3 +64,33 @@ with open (os.path.join (result_dir, "index.html"), "w+") as fd:
    </body>
 </html>
 """ % toc_list)
+
+
+
+for e in entries:
+    if e.date.month != mon:
+        if mon != None:
+            write_index (path, toc_list)
+        path = os.path.join (result_dir, "%04d-%2d" % (e.date.year, e.date.month))
+        os.mkdir (path)
+        idx = 0
+        toc_list = ""
+        mon = e.date.month
+
+    idx += 1
+    out_name = "%05d.html" % idx
+    toc_list += "<a href='%s'>%s: %s</a><br/>\n" % (out_name, e.date, e.title)
+    with open (os.path.join (path, out_name), "w+") as fd:
+        fd.write ("<html><body>\n")
+        fd.write ("<h1>%s: %s</h1>" % (e.date, e.title))
+        fd.write (blog_db.posts[e.url])
+        fd.write ("</body></html>\n")
+    for key in e.images:
+        if key in blog_db.images:
+            with open (os.path.join (path, key), "wb+") as fd:
+                fd.write (blog_db.images[key])
+        else:
+            print "Image %s not in img db, skip" % key
+    print e.date
+
+write_index (path, toc_list)
