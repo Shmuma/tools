@@ -1,14 +1,24 @@
 import logging
+from lib import socks
+import socket
 from lib import db
 from lib import web
 
+# setup socks proxy
+socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS4, "127.0.0.1", 9050)
+socket.socket = socks.socksocket
+
+# logging
 logging.basicConfig (format="%(asctime)s: %(message)s", level=logging.INFO)
 
-blog_db = db.BlogDB ("/mnt/heap/misc/sgolub")
+db_path = "/mnt/heap/misc/sgolub"
+db_path = "db"
+
+blog_db = db.BlogDB (db_path)
 blog_db.load ()
 
 # parse all pages
-for idx in range (0, 1):
+for idx in range (0, 44):
     data = web.wget ("http://sgolub.ru/protograf?page=%d" % idx)
     pg_parser = web.ProtografParser (data)
     for u in pg_parser.links:

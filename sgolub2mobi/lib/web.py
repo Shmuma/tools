@@ -2,17 +2,32 @@
 
 import re
 import md5
+import time
+import random
 import urllib
 import datetime
+import logging
 from HTMLParser import HTMLParser
 
 
-
-def wget (url):
-    fd = urllib.urlopen (url)
-    res = fd.read ()
-    fd.close ()
-    return res
+# User-Agent: Python-urllib/1.17
+def wget (url, random_sleep=True):
+    for i in range (100):
+        try:
+            delay = random.randint (10, 30)
+            logging.info ("wget %s, sleep for %d sec" % (url, delay))
+            # sleep for random amount of seconds to reduce server's load
+            time.sleep (delay)
+            fd = urllib.urlopen (url)
+            #    opener = urllib2.build_opener ()
+            #    opener.addheaders = [('User-agent', 'Mozilla/5.0')]
+            #    fd = opener.open (url)
+            res = fd.read ()
+            fd.close ()
+            return res
+        except IOError:
+            logging.info ("Error, retry %d" % i)
+            continue
 
 
 
@@ -107,6 +122,11 @@ class ArticleParser (HTMLParser):
     def handle_entityref (self, name):
         if self.inside_content > 0:
             self.text += "&%s;" % name
+
+
+    def handle_charref (self, name):
+        if self.inside_content > 0:
+            self.text += "&#%s;" % name
 
 
 
