@@ -12,9 +12,9 @@ from HTMLParser import HTMLParser
 
 # User-Agent: Python-urllib/1.17
 def wget (url, random_sleep=True):
-    for i in range (100):
+    for i in range (10):
         try:
-            delay = random.randint (10, 30)
+            delay = random.randint (5, 10)
             logging.info ("wget %s, sleep for %d sec" % (url, delay))
             # sleep for random amount of seconds to reduce server's load
             time.sleep (delay)

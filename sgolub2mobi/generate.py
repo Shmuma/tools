@@ -66,8 +66,11 @@ for e in entries:
         fd.write ("</body></html>\n")
     for key in e.images:
         if key in blog_db.images:
-            with open (os.path.join (result_dir, key), "wb+") as fd:
-                fd.write (blog_db.images[key])
+            if blog_db.images[key] != None:
+                with open (os.path.join (result_dir, key), "wb+") as fd:
+                    fd.write (blog_db.images[key])
+            else:
+                print "Image '%s' is None" % key
         else:
             print "Image %s not in img db, skip" % key
 

@@ -5,20 +5,20 @@ from lib import db
 from lib import web
 
 # setup socks proxy
-socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS4, "127.0.0.1", 9050)
-socket.socket = socks.socksocket
+#socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS4, "127.0.0.1", 9050)
+#socket.socket = socks.socksocket
 
 # logging
 logging.basicConfig (format="%(asctime)s: %(message)s", level=logging.INFO)
 
 db_path = "/mnt/heap/misc/sgolub"
-db_path = "db"
+#db_path = "db"
 
 blog_db = db.BlogDB (db_path)
 blog_db.load ()
 
 # parse all pages
-for idx in range (0, 44):
+for idx in range (0, 2):
     data = web.wget ("http://sgolub.ru/protograf?page=%d" % idx)
     pg_parser = web.ProtografParser (data)
     for u in pg_parser.links:
@@ -34,8 +34,6 @@ for idx in range (0, 44):
             images = [img.encode ('utf-8') for img in a_parser.images.keys ()]
             me = db.MetaEntry (date, a_parser.title.encode ('utf-8'), url, images)
 
-            blog_db.add_meta (me)
-            blog_db.add_text (url, a_parser.text.encode ('utf-8'))
             logging.info ("Process %d images" % len (a_parser.images))
 
             for dest, src in a_parser.images.iteritems ():
@@ -44,5 +42,9 @@ for idx in range (0, 44):
                     blog_db.add_image (dest.encode ('utf-8'), image_data)
                 except IOError:
                     pass
+
+            # add to meta last
+            blog_db.add_meta (me)
+            blog_db.add_text (url, a_parser.text.encode ('utf-8'))
                 
 
