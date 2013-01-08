@@ -20,8 +20,8 @@ ljname = sys.argv[1]
 logging.basicConfig (format="%(asctime)s: %(message)s", level=logging.INFO)
 
 db_path = "/mnt/heap/misc/ljblogs/%s" % ljname
-db_path = "db/%s" % ljname
-max_page = 2
+#db_path = "db/%s" % ljname
+max_page = 20
 
 blog_db = db.BlogDB (db_path)
 blog_db.load ()
@@ -30,6 +30,9 @@ blog_db.load ()
 for idx in range (0, max_page+1):
     data = web.wget ("http://%s.livejournal.com/?skip=%d" % (ljname, idx*10))
     idx_parser = web.LJIndexParser (data)
+
+    if len (idx_parser.links) == 0:
+        break
 
     for url in idx_parser.links:
         if url in blog_db.meta:
@@ -44,5 +47,4 @@ for idx in range (0, max_page+1):
             # add to meta last
             blog_db.add_meta (me)
             blog_db.add_text (url, a_parser.text.encode ('utf-8'))
-    break
 

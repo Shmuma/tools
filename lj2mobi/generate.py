@@ -36,7 +36,7 @@ else:
     sys.exit (0)
 
 db_path = "/mnt/heap/misc/ljblogs/%s" % ljname
-db_path = "db/%s" % ljname
+#db_path = "db/%s" % ljname
 
 blog_db = db.BlogDB (db_path)
 blog_db.load ()
