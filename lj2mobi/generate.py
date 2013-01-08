@@ -23,21 +23,26 @@ logging.basicConfig (format="%(asctime)s: %(message)s", level=logging.INFO)
 # parse arguments
 dt_from = dt_to = None
 
-if len (sys.argv) == 1:
-    logging.info ("Export all posts")
-elif len (sys.argv) == 3:
-    dt_from = parse_dt (sys.argv[1])
-    dt_to = parse_dt (sys.argv[2], True) - datetime.timedelta (days=1)
+if len (sys.argv) == 2:
+    ljname = sys.argv[1]
+    logging.info ("Export all posts from %s" % ljname)
+elif len (sys.argv) == 4:
+    ljname = sys.argv[1]
+    dt_from = parse_dt (sys.argv[2])
+    dt_to = parse_dt (sys.argv[3], True) - datetime.timedelta (days=1)
     logging.info ("Export posts from %s to %s" % (dt_from, dt_to))
 else:
-    print "Usage: generate.py [YYYY-MM YYYY-MM]"
+    print "Usage: generate.py lj_blog [YYYY-MM YYYY-MM]"
     sys.exit (0)
 
-blog_db = db.BlogDB ("/mnt/heap/misc/sgolub")
+db_path = "/mnt/heap/misc/ljblogs/%s" % ljname
+db_path = "db/%s" % ljname
+
+blog_db = db.BlogDB (db_path)
 blog_db.load ()
 
 # write data
-result_dir = "res"
+result_dir = ljname
 
 os.mkdir (result_dir)
 
@@ -58,10 +63,15 @@ toc_list = ""
 for e in entries:
     idx += 1
     out_name = "%05d.html" % idx
-    toc_list += "<a href='%s'>%s: %s</a><br/>\n" % (out_name, e.date, e.title)
+    if type (e.date) == datetime.datetime:
+        date = e.date.date ()
+    else:
+        date = e.date
+    toc_list += "<a href='%s'>%s: %s</a><br/>\n" % (out_name, date, e.title)
     with open (os.path.join (result_dir, out_name), "w+") as fd:
         fd.write ("<html><body>\n")
-        fd.write ("<h1>%s: %s</h1>" % (e.date, e.title))
+    
+        fd.write ("<h1>%s: %s</h1>" % (date, e.title))
         fd.write (blog_db.posts[e.url])
         fd.write ("</body></html>\n")
     for key in e.images:

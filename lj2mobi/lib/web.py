@@ -31,39 +31,43 @@ def wget (url, random_sleep=True):
 
 
 
-class ProtografParser (HTMLParser):
+class LJIndexParser (HTMLParser):
     """
     Parses page and collects all articles links
     """
     def __init__ (self, data):
         HTMLParser.__init__ (self)
-        self.kindergarden = set ()
+        self.entry_title = False
+
         self.links = set ()
         self.feed (data)
         self.close ()        
 
 
     def handle_starttag (self, tag, attrs):
-        if tag == 'a':
-            for name, val in attrs:               
-                if name == 'href' and val.startswith ('/protograf/'):
-                    if val in self.kindergarden:
-                        self.links.add (val)
-                    else:
-                        self.kindergarden.add (val)
+        att = dict (attrs)
+        if tag == 'dt' and att.get ('class') == 'entry-title':
+            self.entry_title = True
+            
+        if tag == 'a' and self.entry_title:
+            self.links.add (att['href'])
+
+
+    def handle_endtag (self, tag):
+        if tag == 'dt':
+            self.entry_title = False
 
 
 
 class ArticleParser (HTMLParser):
-    title = None
+    title = ""
     date = None
     text = ""
     images = None
 
-    # state
-    title_coming = False
-    date_coming = False
+    inside_title = False
     inside_content = 0
+    br_last = False
 
     def __init__ (self, data):
         HTMLParser.__init__ (self)
@@ -83,50 +87,48 @@ class ArticleParser (HTMLParser):
         self.images[dest] = url_src
         return "<img src=\"%s\"/>" % dest
 
+
     def handle_starttag (self, tag, attrs):
-        if self.inside_content > 0:
-            self.inside_content += 1
-            if tag == 'img':
-                self.text += self.tweak_image (attrs)
-            else:
-                self.text += "<%s %s>" % (tag, " ".join (map (lambda a: "%s='%s'" % a, attrs)))
-            return
         att = dict (attrs)
-        if tag == "h1" and att.get ('class') == "main-page-title":
-            self.title_coming = True
-        if tag == "span" and att.get ('class') == "date":
-            self.date_coming = True
-        if tag == 'div' and att.get ('class') == 'content clear-block':
+        if tag == 'abbr' and att.get ('class') == 'updated':
+            self.date = att.get ('title')
+
+        if tag == 'dt' and att.get ('class') == 'entry-title':
+            self.inside_title = True
+
+        if tag == 'br' and self.inside_content > 0 and not self.br_last:
+            self.text += "<br>"
+            self.br_last = True
+
+        if tag == 'div' and att.get ('class') == 'entry-content':
             self.inside_content += 1
 
 
     def handle_endtag (self, tag):
-        if self.title_coming and tag == "h1":
-            self.title_coming = False
-        if self.date_coming and tag == "span":
-            self.date_coming = False
-        if self.inside_content > 0:
-            self.text += "</%s>" % tag
+        if self.inside_title and tag == 'dt':
+            self.inside_title = False
+        if self.inside_content > 0 and tag == 'div':
             self.inside_content -= 1
 
 
-    def handle_data (self, data):
-        if self.title_coming:
-            self.title = data
-        if self.date_coming:
-            self.date = data
+    def __handle_text (self, text):
         if self.inside_content > 0:
-            self.text += data
+            self.text += text
+        elif self.inside_title:
+            self.title += text
+        self.br_last = False
+
+
+    def handle_data (self, data):
+        self.__handle_text (data)
 
 
     def handle_entityref (self, name):
-        if self.inside_content > 0:
-            self.text += "&%s;" % name
+        self.__handle_text ("&%s;" % name)
 
 
     def handle_charref (self, name):
-        if self.inside_content > 0:
-            self.text += "&#%s;" % name
+        self.__handle_text ("&#%s;" % name)
 
 
 
