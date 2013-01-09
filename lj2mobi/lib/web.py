@@ -97,7 +97,7 @@ class ArticleParser (HTMLParser):
             self.inside_title = True
 
         if tag == 'br' and self.inside_content > 0 and not self.br_last:
-            self.text += "<br>"
+            self.text += "<br><br>"
             self.br_last = True
 
         if tag == 'div' and att.get ('class') == 'entry-content':
