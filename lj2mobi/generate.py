@@ -77,6 +77,7 @@ for e in entries:
     for key in e.images:
         if key in blog_db.images:
             if blog_db.images[key] != None:
+                print key
                 with open (os.path.join (result_dir, key), "wb+") as fd:
                     fd.write (blog_db.images[key])
             else:

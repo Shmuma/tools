@@ -23,6 +23,8 @@ db_path = "/mnt/heap/misc/ljblogs/%s" % ljname
 #db_path = "db/%s" % ljname
 max_page = 20
 
+blog_url = "http://%s.livejournal.com" % ljname
+
 blog_db = db.BlogDB (db_path)
 blog_db.load ()
 
@@ -40,9 +42,19 @@ for idx in range (0, max_page+1):
         else:
             logging.info ("Process post %s" % url)
             data = web.wget (url)
-            a_parser = web.ArticleParser (data.decode ("utf-8"))
+            a_parser = web.ArticleParser (data.decode ("utf-8"), blog_url)
             date = dateutil.parser.parse (a_parser.date)
-            me = db.MetaEntry (date, a_parser.title.encode ('utf-8'), url, [])
+            images = [img.encode ('utf-8') for img in a_parser.images.keys ()]
+            me = db.MetaEntry (date, a_parser.title.encode ('utf-8'), url, images)
+
+            logging.info ("Process %d images" % len (a_parser.images))
+
+            for dest, src in a_parser.images.iteritems ():
+                try:
+                    image_data = web.wget (src.encode ('utf-8'))
+                    blog_db.add_image (dest.encode ('utf-8'), image_data)
+                except IOError:
+                    pass
 
             # add to meta last
             blog_db.add_meta (me)

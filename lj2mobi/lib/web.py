@@ -69,9 +69,10 @@ class ArticleParser (HTMLParser):
     inside_content = 0
     br_last = False
 
-    def __init__ (self, data):
+    def __init__ (self, data, blog_url):
         HTMLParser.__init__ (self)
         self.images = {}
+        self.blog_url = blog_url
         self.feed (data)
         self.close ()
 
@@ -81,8 +82,10 @@ class ArticleParser (HTMLParser):
         if url_src == None:
             return ""
         if url_src[0] == '/':
-            url_src = u'http://sgolub.ru' + url_src
+            url_src = self.blog_url.encode ('utf-8') + url_src
         ext = url_src.split ('.')[-1]
+        if ext.find ('/') >= 0:
+            ext = "jpg"
         dest = md5.new (url_src.encode ('utf-8')).hexdigest () + "." + ext
         self.images[dest] = url_src
         return "<img src=\"%s\"/>" % dest
@@ -90,8 +93,15 @@ class ArticleParser (HTMLParser):
 
     def handle_starttag (self, tag, attrs):
         att = dict (attrs)
+        if tag == "img":
+            if self.inside_content > 0:
+                self.text += self.tweak_image (attrs)
+
         if tag == 'abbr' and att.get ('class') == 'updated':
             self.date = att.get ('title')
+
+        if tag == "meta" and att.get ("name") == "title":
+            self.title = att.get ("content")
 
         if tag == 'dt' and att.get ('class') == 'entry-title':
             self.inside_title = True
@@ -100,7 +110,7 @@ class ArticleParser (HTMLParser):
             self.text += "<br><br>"
             self.br_last = True
 
-        if tag == 'div' and att.get ('class') == 'entry-content':
+        if tag == 'div' and att.get ('class') in ['entry-content', 'b-singlepost-body']:
             self.inside_content += 1
 
 
