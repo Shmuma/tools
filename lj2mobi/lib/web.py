@@ -68,6 +68,7 @@ class ArticleParser (HTMLParser):
 
     inside_title = False
     inside_content = 0
+    div_depth = 0
     br_last = False
 
     def __init__ (self, data, blog_url):
@@ -111,15 +112,22 @@ class ArticleParser (HTMLParser):
             self.text += "<br><br>"
             self.br_last = True
 
-        if tag == 'div' and att.get ('class') in ['entry-content', 'b-singlepost-body']:
+        if att.get ('class') in ['entry-content', 'b-singlepost-body']:
             self.inside_content += 1
+
+        if tag == 'div' and self.inside_content > 0:
+            self.div_depth += 1
+
 
 
     def handle_endtag (self, tag):
         if self.inside_title and tag == 'dt':
             self.inside_title = False
-        if self.inside_content > 0 and tag == 'div':
-            self.inside_content -= 1
+        if tag == 'div':
+            if self.div_depth > 0:
+                self.div_depth -= 1
+            elif self.inside_content > 0:
+                self.inside_content -= 1
 
 
     def __handle_text (self, text):
