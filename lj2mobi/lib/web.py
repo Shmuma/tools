@@ -14,10 +14,11 @@ from HTMLParser import HTMLParser
 def wget (url, random_sleep=True):
     for i in range (10):
         try:
-            delay = random.randint (5, 10)
-            logging.info ("wget %s, sleep for %d sec" % (url, delay))
+#            delay = random.randint (1, 2)
+#            logging.info ("wget %s, sleep for %d sec" % (url, delay))
+            logging.info ("wget %s" % url)
             # sleep for random amount of seconds to reduce server's load
-            time.sleep (delay)
+#            time.sleep (delay)
             fd = urllib.urlopen (url)
             #    opener = urllib2.build_opener ()
             #    opener.addheaders = [('User-agent', 'Mozilla/5.0')]
