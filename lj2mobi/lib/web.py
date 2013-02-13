@@ -90,7 +90,7 @@ class ArticleParser (HTMLParser):
             ext = "jpg"
         dest = md5.new (url_src.encode ('utf-8')).hexdigest () + "." + ext
         self.images[dest] = url_src
-        return "<img src=\"%s\"/>" % dest
+        return "<img src=\"%s\"/><br/>" % dest
 
 
     def handle_starttag (self, tag, attrs):
@@ -107,9 +107,10 @@ class ArticleParser (HTMLParser):
 
         if tag == 'dt' and att.get ('class') == 'entry-title':
             self.inside_title = True
+            self.title = ""
 
         if tag == 'br' and self.inside_content > 0 and not self.br_last:
-            self.text += "<br><br>"
+            self.text += "<br/><br/>"
             self.br_last = True
 
         if att.get ('class') in ['entry-content', 'b-singlepost-body']:
@@ -126,6 +127,7 @@ class ArticleParser (HTMLParser):
         if tag == 'div':
             if self.div_depth > 0:
                 self.div_depth -= 1
+                self.text += "<br/>"
             elif self.inside_content > 0:
                 self.inside_content -= 1
 
