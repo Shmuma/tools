@@ -10,8 +10,10 @@ from urlparse import urlparse
 from pprint import pprint
 
 names = {
-    "192.168.2.21": "jul",
-    "192.168.2.22": "ksu",
+    "192.168.2.151": "jul-1",
+    "192.168.2.153": "jul-2",
+    "192.168.2.152": "ksu-1",
+    "192.168.2.154": "ksu-2",
 }
 
 timelines = []
