@@ -1,0 +1,86 @@
+"""
+Transcription database. Can read transcription in Oxford Word Practice format and query it.
+"""
+
+import xml.etree.ElementTree as ElementTree
+
+
+class TranscriptDB:
+    """
+    Transcript DB
+    """
+    def __init__(self):
+        """
+        Create empty transcription DB
+        """
+        # maps word to it's entry object
+        self.db = {}
+
+    def read(self, file_name, filter_unit=None):
+        """
+        Reads XML data from filename, appending it to database
+        :param file_name: xml filename to read
+        :param filter_unit: if specified, only words from this unit will be read
+        :return: count of entries loaded
+        """
+        tree = ElementTree.parse(file_name)
+        return self._process_tree(tree.getroot(), filter_unit)
+
+    def parse(self, data, filter_unit=None):
+        root = ElementTree.fromstring(data)
+        return self._process_tree(root, filter_unit)
+
+    def _process_tree(self, root, filter_unit=None):
+        count = 0
+        for word in root:
+            if word.tag != "word":
+                continue
+            units = self.parse_units(word.attrib["unit"])
+
+            if filter_unit is not None and filter_unit not in units:
+                continue
+            w_text, synonym = self.extract_synonym(word.attrib["str"])
+            ipa = unicode(word[0].text)
+            entry = TranscriptEntry(word=w_text, synonym=synonym, units=units, ipa=ipa)
+            count += 1
+            self.db[w_text] = entry
+        return count
+
+    @staticmethod
+    def parse_units(units):
+        """
+        Parses comma-separated list of integer units into set(int)
+        :param units:
+        :return:
+        """
+        res = set()
+        for v in units.split(","):
+            res.add(int(v.strip()))
+        return res
+
+    @staticmethod
+    def extract_synonym(word_text):
+        """
+        Extracts synonym from text in "word (= synonym)"
+        :param word_text:
+        :return: pair of word,synonym
+        """
+        pos = word_text.find("(= ")
+        if pos < 0:
+            return word_text, None
+        end_pos = word_text.find(")")
+        return word_text[:pos-1], word_text[pos+3:end_pos]
+
+
+class TranscriptEntry:
+    """
+    Transcript entry
+    """
+    def __init__(self, word, synonym, units, ipa):
+        self.word = word
+        self.synonym = synonym
+        self.units = units
+        self.ipa = ipa
+
+    def __str__(self):
+        return u"word=%s, synonym=%s, units=%s, ipa=%s" % (self.word, self.synonym, self.units, self.ipa)
