@@ -1,3 +1,4 @@
+# coding=utf-8
 """
 Transcription database. Can read transcription in Oxford Word Practice format and query it.
 """
@@ -46,6 +47,12 @@ class TranscriptDB:
             self.db[w_text] = entry
         return count
 
+    def sorted_entries(self):
+        return map(lambda v: v[1], sorted(self.db.iteritems(), key=lambda v: v[0]))
+
+    def entries(self):
+        return self.db.values()
+
     @staticmethod
     def parse_units(units):
         """
@@ -81,6 +88,48 @@ class TranscriptEntry:
         self.synonym = synonym
         self.units = units
         self.ipa = ipa
+        self.ipa_utf8 = decode_transcription(ipa)
 
     def __str__(self):
         return u"word=%s, synonym=%s, units=%s, ipa=%s" % (self.word, self.synonym, self.units, self.ipa)
+
+
+def decode_transcription(s):
+    """
+    Decode Oxford transcription encoding into UTF-8 IPA characters
+    :param s:
+    :return:
+    """
+    decoded = '/' + ''.join(map(_decode_char, s)) + '/'
+
+    decoded = decoded.replace(u'(r)', ' ' + unichr(876))
+
+    return decoded.encode("utf-8")
+
+def _decode_char(c):
+    table = {
+        u'&': u'æ',
+        u'"': u"ˈ",
+        u'I': u'ɪ',
+        u'S': u'ʃ',
+        u'%': u'ˌ',
+        u'O': u'ɔ',
+        u':': u'ː',
+        u'@': u'ə',
+        u'Q': u'ɒ',
+        u'U': u'ʊ',
+        u'T': u'θ',
+        u'Í': u'tʃ',
+        u'Z': u'ʒ',
+        u'V': u'ʌ',
+        u'A': u'ɑ',
+        u'Ù': u'dʒ',
+        u'3': u'ɜ',
+        u'N': u'ŋ',
+        u'2': u'',
+        u'D': u'ð',
+    }
+
+    if c in table:
+        return table[c]
+    return c
