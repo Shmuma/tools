@@ -24,7 +24,9 @@ for div in soup.find_all("div"):
         mp3_url = mp3
 
 uk_div = soup.find('div', {'class': 'big-pron-uk-container'})
-print uk_div.find('span', {'class': 'ipa'}).get_text()
+ipa = uk_div.find('span', {'class': 'ipa'})
+if ipa is not None:
+    print "/" + ipa.get_text() + "/"
 
 file_name = "%s.mp3" % args.word
 
