@@ -22,6 +22,8 @@ for div in soup.find_all("div"):
     mp3 = div.get('data-src-mp3')
     if mp3 is not None and mp3.find("uk") >= 0:
         mp3_url = mp3
+        # it's possible to have multiple sound on one page, so, it's better to stop early
+        break
 
 uk_div = soup.find('div', {'class': 'big-pron-uk-container'})
 ipa = uk_div.find('span', {'class': 'ipa'})
