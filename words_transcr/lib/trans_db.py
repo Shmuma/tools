@@ -45,7 +45,7 @@ class TranscriptDB:
             if filter_unit is not None and filter_unit not in units:
                 continue
             w_text, synonym = self.extract_synonym(word.attrib["str"])
-            ipa = unicode(word[0].text)
+            ipa = unicode(word[0].text).strip("/")
             entry = TranscriptEntry(word=w_text, synonym=synonym, units=units, ipa=ipa)
             count += 1
             self.db[w_text] = entry
