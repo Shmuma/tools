@@ -36,7 +36,11 @@ class TranscriptDB:
         for word in root:
             if word.tag != "word":
                 continue
-            units = self.parse_units(word.attrib["unit"])
+            if "unit" in word.attrib:
+                units = self.parse_units(word.attrib["unit"])
+            else:
+                print "Word %s has no unit!" % word.attrib["str"]
+                units = set()
 
             if filter_unit is not None and filter_unit not in units:
                 continue
