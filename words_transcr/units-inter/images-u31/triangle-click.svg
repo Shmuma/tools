@@ -1,0 +1,66 @@
+<svg version="1.1" baseProfile="full"
+     xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="502px" height="435px" viewBox="0 0 502 435"
+     stroke="black" stroke-width="0.5px">
+
+<script>
+//<![CDATA[
+
+var svgNS = "http://www.w3.org/2000/svg";
+var xlinkNS = "http://www.w3.org/1999/xlink";
+
+function divide(evt){   
+   // Get the triangle that was clicked.
+   var triangle = evt.currentTarget;
+   
+   // Get the point that was clicked:   
+   var position = document.rootElement.createSVGPoint();
+   position.x = evt.clientX;
+   position.y = evt.clientY;
+   var correctPosition=position.matrixTransform(triangle.getScreenCTM().inverse());
+   xclick = correctPosition.x;
+   yclick = correctPosition.y;
+   
+   // Find the vertices:
+   var points = triangle.getAttributeNS(null, "points");  
+   var pointsArray = points.split(" "); // Array of 3 points of the form "x,y".
+   var point1 = pointsArray[0].split(",");
+   var x1 = parseFloat(point1[0]);
+   var y1 = parseFloat(point1[1]);
+   var point2 = pointsArray[1].split(",");
+   var x2 = parseFloat(point2[0]);
+   var y2 = parseFloat(point2[1]);
+   var point3 = pointsArray[2].split(",");
+   var x3 = parseFloat(point3[0]);
+   var y3 = parseFloat(point3[1]);
+   
+   var newTriangle1 = document.createElementNS(svgNS, "polygon");   
+   points = ""+xclick+","+yclick+" "+x2+","+y2+" "+x3+","+y3;
+   newTriangle1.setAttributeNS(null, "points", points);
+   newTriangle1.setAttributeNS(null, "fill", "red");
+   newTriangle1.setAttributeNS(null, "onclick", "divide(evt)");
+
+   var newTriangle2 = document.createElementNS(svgNS, "polygon");   
+   points = ""+x1+","+y1+" "+xclick+","+yclick+" "+x3+","+y3;
+   newTriangle2.setAttributeNS(null, "points", points);
+   newTriangle2.setAttributeNS(null, "fill", "yellow");
+   newTriangle2.setAttributeNS(null, "onclick", "divide(evt)");
+
+   var newTriangle3 = document.createElementNS(svgNS, "polygon");   
+   points = ""+x1+","+y1+" "+x2+","+y2+" "+xclick+","+yclick;
+   newTriangle3.setAttributeNS(null, "points", points);
+   newTriangle3.setAttributeNS(null, "fill", "blue");
+   newTriangle3.setAttributeNS(null, "onclick", "divide(evt)");
+
+   document.documentElement.removeChild(triangle);
+   document.documentElement.appendChild(newTriangle1);
+   document.documentElement.appendChild(newTriangle2);
+   document.documentElement.appendChild(newTriangle3);
+}
+
+// ]]>
+</script>
+
+<polygon points="1,434 501,434 251,1" fill="blue" onclick="divide(evt)"/>
+
+</svg>
