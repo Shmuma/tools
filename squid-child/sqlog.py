@@ -21,6 +21,7 @@ names = {
 timelines = []
 cur_timelines = {}
 hosts = {}
+hr_dt_counts = {}
 
 for l in sys.stdin:
     v = re.split("\s+", l)
@@ -30,9 +31,13 @@ for l in sys.stdin:
     
     client = names.get(client, client)
     dt = datetime.datetime.fromtimestamp(ts)
+    hr_dt = dt.replace(minute=0, second=0, microsecond=0)
 
     url = urlparse(addr)
     
+    if url.netloc.find("accu-weather.com") >= 0 or len(url.netloc) == 0 or url.netloc.find("msftncsi.com") >= 0:
+        continue
+
     if not client in hosts:
         hosts[client] = {}
 
@@ -48,6 +53,14 @@ for l in sys.stdin:
     else:
         tl = (tl[0], dt)
     cur_timelines[client] = tl
+    
+    if client not in hr_dt_counts:
+        hr_dt_counts[client] = {}
+    client_hr_dt = hr_dt_counts[client]
+    if hr_dt not in client_hr_dt:
+        client_hr_dt[hr_dt] = url.netloc
+    else:
+        client_hr_dt[hr_dt] += " '%s'" % url.netloc
 
 for client in cur_timelines.keys():
     tl = cur_timelines[client]
@@ -65,6 +78,10 @@ for client in hosts.keys():
             print
         print "\t%s: %s -> %s" % (client, tl[0], tl[1])
         prev_d = tl[1].day
+    print
+
+    for hr_dt in sorted(hr_dt_counts[client].keys()):
+        print "\t%s: %s" % (hr_dt, hr_dt_counts[client][hr_dt])
     print
 
 for client in hosts.keys():
